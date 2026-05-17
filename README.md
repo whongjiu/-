@@ -1,1 +1,54 @@
-# -
+这是一个包含点名 管理 值班 等集合系统 适配用于学风管理
+
+
+
+# -========================================
+  学风管理系统 - 宝塔部署说明
+========================================
+
+📦 文件清单
+----------------------------------------
+ai-tokootsoen-deploy.zip  (约5.4MB)
+包含：源码 + 编译产物(.next) + 数据库(admin only) + 配置
+
+🔑 管理员账号
+----------------------------------------
+用户名: admin
+密码:   admin123
+(数据库已清空，仅有此管理员账号)
+
+🚀 宝塔部署步骤
+----------------------------------------
+
+1. 登录宝塔面板 → 文件管理
+   上传 ai-tokootsoen-deploy.zip 到 /www/wwwroot/ 目录
+   解压到 /www/wwwroot/ai-tokootsoen/
+
+2. 宝塔面板 → 网站 → Node项目 → 添加Node项目
+   - 项目目录: /www/wwwroot/ai-tokootsoen
+   - 启动文件: 留空 (使用 package.json 中的 start 脚本)
+   - 项目名称: ai-tokootsoen
+   - 运行端口: 3002
+   - 启动命令: npm start
+   - Node版本: 18.x 或 20.x
+
+3. 安装依赖 (宝塔终端中执行):
+   cd /www/wwwroot/ai-tokootsoen
+   npm install
+   npx prisma generate
+
+4. 启动项目:
+   - 在宝塔Node项目管理中点击"启动"
+   - 或使用PM2: pm2 start npm --name "xuefeng" -- start
+
+5. 访问:
+   http://你的服务器IP:3002
+   使用 admin / admin123 登录
+
+⚠️ 注意事项
+----------------------------------------
+- 数据库为 SQLite，文件位于 prisma/dev.db
+- 上传的图片保存在 public/uploads/
+- JWT密钥在 .env 文件中，建议修改
+- 注册邀请码: init2026 (在系统配置中可修改)
+- 如使用Nginx反代，需配置反向代理到 127.0.0.1:3002
