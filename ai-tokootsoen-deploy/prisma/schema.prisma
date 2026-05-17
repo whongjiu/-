@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  username   String   @unique
+  password   String
+  name       String
+  role       String   // "admin" | "member" | "leader"
+  classId    Int?
+  class      Class?   @relation(fields: [classId], references: [id])
+  inviteCode String?
+  canNotify  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  dutySchedules DutySchedule[]
+  rollCallLists RollCallList[]
+  workLogs      WorkLog[]
+  memberDuties  MemberDuty[]
+  attendances   Attendance[]
+}
+
+model Class {
+  id          Int         @id @default(autoincrement())
+  name        String      @unique
+  dormitoryId Int?
+  dormitory   Dormitory?  @relation(fields: [dormitoryId], references: [id])
+  users       User[]
+  schedules   DutySchedule[]
+  rollCalls   RollCallList[]
+  duties      MemberDuty[]
+}
+
+model Dormitory {
+  id        Int            @id @default(autoincrement())
+  building  String         @unique
+  classes   Class[]
+  schedules DutySchedule[]
+}
+
+model DutySchedule {
+  id          Int        @id @default(autoincrement())
+  dayOfWeek   Int        // 1-7 (周一至周日)
+  memberId    Int
+  member      User       @relation(fields: [memberId], references: [id])
+  classId     Int?
+  class       Class?     @relation(fields: [classId], references: [id])
+  dormitoryId Int
+  dormitory   Dormitory  @relation(fields: [dormitoryId], references: [id])
+}
+
+model RollCallList {
+  id        Int      @id @default(autoincrement())
+  leaderId  Int
+  leader    User     @relation(fields: [leaderId], references: [id])
+  classId   Int
+  class     Class    @relation(fields: [classId], references: [id])
+  names     String   // JSON string array
+  enrolled  Boolean  @default(false)
+  reviewed  Boolean  @default(false)
+  images    String?  // JSON array of board photo image paths
+  createdAt DateTime @default(now())
+
+  attendances Attendance[]
+}
+
+model Attendance {
+  id          Int          @id @default(autoincrement())
+  rollCallId  Int
+  rollCall    RollCallList @relation(fields: [rollCallId], references: [id])
+  studentName String
+  status      String       // "present" | "absent" | "leave"
+  reviewedBy  Int?
+  reviewer    User?        @relation(fields: [reviewedBy], references: [id])
+  images      String?      // JSON array of image paths
+  updatedAt   DateTime     @updatedAt
+}
+
+model Report {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  imageUrl  String?
+  createdAt DateTime @default(now())
+}
+
+model WorkLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+model SystemConfig {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}
+
+model MemberDuty {
+  id        Int    @id @default(autoincrement())
+  memberId  Int
+  member    User   @relation(fields: [memberId], references: [id])
+  classId   Int
+  class     Class  @relation(fields: [classId], references: [id])
+  dayOfWeek Int?   // 每天轮换: 1-7
+  order     Int?   // 每周轮换: 排序序号
+  mode      String // "daily" | "weekly"
+  source    String @default("member") // "member" | "admin"
+}
+
+model InviteCode {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  type      String   @default("leader") // "leader" | "member"
+  maxUses   Int      @default(1)
+  useCount  Int      @default(0)
+  usedBy    Int?
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
